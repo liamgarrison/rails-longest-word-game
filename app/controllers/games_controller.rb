@@ -1,3 +1,5 @@
+require 'open-uri'
+
 class GamesController < ApplicationController
   def new
     @letters = []
@@ -21,15 +23,18 @@ class GamesController < ApplicationController
     guessed_letter_freq.map { |l, freq| freq <= given_letter_freq[l] }.all?
   end
 
-  def is_english_word?(guessed_letters)
-    true
+  def english_word?(guessed_letters)
+    url = "https://wagon-dictionary.herokuapp.com/#{guessed_letters}"
+    word_serialized = open(url).read
+    word = JSON.parse(word_serialized)
+    word["found"]
   end
 
   def score
     guessed_letters = params[:guessed_letters].upcase
     given_letters = params[:given_letters]
 
-    if !is_english_word?(guessed_letters)
+    if !english_word?(guessed_letters)
       @result = "Sorry, but #{guessed_letters} is does not seem to be a valid English word..."
     elsif can_be_built?(guessed_letters, given_letters)
       @result = "Congratulations! #{guessed_letters} is a valid English word!"
