@@ -6,7 +6,27 @@ class GamesController < ApplicationController
     10.times do
       @letters << ('A'..'Z').to_a.sample
     end
+    # Set the session score to 0 on first go
+    session["score"] = 0 unless session["score"]
+    @score = session["score"]
   end
+
+  def score
+    guessed_letters = params[:guessed_letters].upcase
+    given_letters = params[:given_letters]
+
+    if !english_word?(guessed_letters)
+      @result = "Sorry, but #{guessed_letters} is does not seem to be a valid English word..."
+    elsif can_be_built?(guessed_letters, given_letters)
+      @result = "Congratulations! #{guessed_letters} is a valid English word!"
+      session["score"] += guessed_letters.length
+    else
+      @result = "Sorry but #{guessed_letters} cannot be built out of #{given_letters.split('').join(", ")}"
+    end
+    @score = session["score"]
+  end
+
+  private
 
   def letters_to_frequencies(letter_str)
     frequencies = Hash.new(0)
@@ -28,18 +48,5 @@ class GamesController < ApplicationController
     word_serialized = open(url).read
     word = JSON.parse(word_serialized)
     word["found"]
-  end
-
-  def score
-    guessed_letters = params[:guessed_letters].upcase
-    given_letters = params[:given_letters]
-
-    if !english_word?(guessed_letters)
-      @result = "Sorry, but #{guessed_letters} is does not seem to be a valid English word..."
-    elsif can_be_built?(guessed_letters, given_letters)
-      @result = "Congratulations! #{guessed_letters} is a valid English word!"
-    else
-      @result = "Sorry but #{guessed_letters} cannot be built out of #{given_letters.split('').join(", ")}"
-    end
   end
 end
